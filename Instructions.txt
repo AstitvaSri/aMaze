@@ -1,0 +1,26 @@
+(For UBUNTU)
+
+1. Setting up GLFW:
+
+Download GLFW source code from here : https://github.com/glfw/glfw (If you don't already have it)
+
+Unzip, navigate to extracted folder and run the following commands in terminal:
+
+makedir build
+cd build
+cmake ..
+make
+sudo make install
+
+2. Copy the folders present in "include files" directory to your "/use/local/include/".
+
+3. Make sure you have OpenGL and its dependencies installed. (Most of them come pre-installed with linux)
+
+4. Go to "aMaze" directory and compile "aMaze.cpp" from terminal : 
+
+g++ aMaze.cpp  glad.c -o aMaze -lglfw3 -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lstdc++fs
+
+5. ./aMaze
+
+
+# In case of any compilation error, reach out to me at "astitva.srivastav@research.iiit.ac.in"
