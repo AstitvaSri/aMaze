@@ -21,6 +21,3 @@ sudo make install
 g++ aMaze.cpp  glad.c -o aMaze -lglfw3 -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lstdc++fs
 
 5. ./aMaze
-
-
-# In case of any compilation error, reach out to me at "astitva.srivastav@research.iiit.ac.in"
