@@ -7,7 +7,7 @@
 
 #include "shader_s.h"
 
-#define V 100 //4*DIM*DIM
+#define V 1600 //4*DIM*DIM
 
 #include "djkstra.h"
 
@@ -20,7 +20,7 @@ using namespace std;
 #include <thread>
 #include <experimental/filesystem>
 
-#define DIM 5
+#define DIM 20
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -52,7 +52,7 @@ int WIN = 0;
 int display_indicators = 1;
 
 int disable_movement = 0;
-int powerups_quantity_factor = 150; //decrease this values for more quantity
+int powerups_quantity_factor = 200; //decrease this values for more quantity
 int obstacles_quantity_factor = 300; //decrease this values for more quantity
 
 // light properties
