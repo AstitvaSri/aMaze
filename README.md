@@ -43,7 +43,8 @@ recharged over the cost of a few coins. Use this trade-off for your benefit.
 
 
 ## --------------------- INSTRUCTIONS TO COMPILE AND RUN ------------------------
-## (For UBUNTU)
+
+# (For UBUNTU)
 
 1. Setting up GLFW:
 
@@ -66,8 +67,6 @@ sudo make install
 g++ aMaze.cpp  glad.c -o aMaze -lglfw3 -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lstdc++fs
 
 5. ./aMaze
-
-## --------------------------------------------------------------------------------
 
 
 
