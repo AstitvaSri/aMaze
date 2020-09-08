@@ -53,9 +53,13 @@ Download GLFW source code from here : https://github.com/glfw/glfw (If you don't
 Unzip, navigate to extracted folder and run the following commands in terminal:
 
 makedir build
+
 cd build
+
 cmake ..
+
 make
+
 sudo make install
 
 2. Copy the folders present in "include files" directory to your "/use/local/include/".
