@@ -62,7 +62,7 @@ make
 
 sudo make install
 
-2. Copy the folders present in "include files" directory to your "/use/local/include/".
+2. Copy the folders present in "include files" directory to your "/user/local/include/".
 
 3. Make sure you have OpenGL and its dependencies installed. (Most of them come pre-installed with linux)
 
