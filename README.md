@@ -42,9 +42,9 @@ recharged over the cost of a few coins. Use this trade-off for your benefit.
 
 
 
-## --------------------- INSTRUCTIONS TO COMPILE AND RUN ------------------------
+### --------------------- INSTRUCTIONS TO COMPILE AND RUN ------------------------
 
-# (For UBUNTU)
+#### (For UBUNTU)
 
 1. Setting up GLFW:
 
