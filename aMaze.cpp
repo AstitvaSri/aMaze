@@ -7,6 +7,10 @@
 
 #include "shader_s.h"
 
+#define V 100 //4*DIM*DIM
+
+#include "djkstra.h"
+
 using namespace std;
 #include <bits/stdc++.h> 
 #include <unistd.h>
@@ -15,6 +19,8 @@ using namespace std;
 #include <time.h>
 #include <thread>
 #include <experimental/filesystem>
+
+#define DIM 5
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -31,19 +37,23 @@ deque <float> chasing_chain;
 // settings
 unsigned int SCR_WIDTH = 1080;
 unsigned int SCR_HEIGHT = 720;
-int maze_dim = 20; //It will make a 40x40 maze (Not 20x20)
+
 //maze_info
-int place_cube[2*20][2*20]; //don't forget to put maze_dimension here
-int place_pow[2*20][2*20];  //here too
-int place_obs[2*20][2*20];  //and here again
+//position range is -DIM to DIM
+int maze_dim = DIM; //It will make a 2*DIM x 2*DIM maze (Not DIM x DIM)
+int place_cube[2*DIM][2*DIM]; //don't forget to put maze_dimension here
+int place_pow[2*DIM][2*DIM];  //here too
+int place_obs[2*DIM][2*DIM];  //and here again
+int graph[4*DIM*DIM][4*DIM*DIM];
+
 
 int LOSE = 0;
 int WIN = 0;
 int display_indicators = 1;
 
 int disable_movement = 0;
-int powerups_quantity_factor = 200;
-int obstacles_quantity_factor = 300;
+int powerups_quantity_factor = 150; //decrease this values for more quantity
+int obstacles_quantity_factor = 300; //decrease this values for more quantity
 
 // light properties
 int powerup = 0;
@@ -60,6 +70,17 @@ glm::vec3 CameraPos = glm::vec3(float(maze_dim),y_pos_moving,float(maze_dim-1));
 glm::vec3 CameraTarget = glm::vec3(float(maze_dim),0.0f,float(maze_dim-1));
 glm::vec3 CameraUp = glm::vec3(0.0f,0.0f,-1.0f);
 glm::mat4 view = glm::lookAt(CameraPos,CameraTarget, CameraUp);
+
+//enemy
+int enemy_exist = 1;
+glm::vec2 enemy_pos = glm::vec2(float(-maze_dim),float(-maze_dim));
+glm::vec2 target_pos = glm::vec2(enemy_pos.x,enemy_pos.y); //initially right
+int retarget = 1;
+int enemy_direction = 1; //1-Right, 2-Left, 3-Down, 4-Up
+float enemy_speed = 0.01f;
+int* parent;
+glm::mat4 model_enemy;
+
 
 //light
 glm::vec3 diffuse_light = glm::vec3(1.0,1.0,1.0);
@@ -81,6 +102,7 @@ time_t maze_rotation_timer = time(NULL);
 time_t grow_timer = 0;
 time_t decay_power_timer = time(NULL);
 
+int render_everything = 1;
 
 //collision parameters
 bool ongoing_collision = 0;
@@ -502,9 +524,7 @@ float indicators_vertices[] = {
         count++;
     }
     correct_path[2*maze_dim-1][2*maze_dim-1]=1;
-    // for(int i=-maze_dim;i<maze_dim;i++)
-    // for (int j=-maze_dim;j<maze_dim;j++)
-    // std::cout<<correct_path[i+maze_dim][j+maze_dim];
+
 
     //placing cubes in maze
     std::memset(place_cube, -1, sizeof(place_cube[0][0]) * 2*maze_dim * 2*maze_dim);
@@ -540,12 +560,71 @@ float indicators_vertices[] = {
         glClear(GL_COLOR_BUFFER_BIT);
 
         glEnable(GL_DEPTH_TEST); 
+
+
+
+//=================================================================================
+
+    //graph
+    std::memset(graph, 0, sizeof(graph[0][0]) * DIM * DIM);
+    for(int i=0;i<2*DIM;i++){
+        for(int j=0;j<(((2*DIM))-1);j++){
+            if(place_cube[i][j]<=0 && place_cube[i][j+1]<=0){
+				int p = (2*DIM*i) + j;
+				int q = (2*DIM*i) + j + 1;
+                graph[p][q] = 1;
+                graph[q][p] = 1;
+            }            
+        }
+    }
+
+    for(int i=0;i<(((2*DIM))-1);i++){
+        for(int j=0;j<2*DIM;j++){
+            if(place_cube[i][j]==0 && place_cube[i+1][j]==0){
+                int p = (2*DIM*i) + j;
+				int q = (2*DIM*(i+1)) + j;
+                graph[p][q] = 1;
+                graph[q][p] = 1;
+            }            
+        }
+    }
+    
+    if (retarget==1){
+        retarget = 0;
+        int src = int(  (2*DIM*(maze_dim+round(CameraTarget.x))) + (maze_dim + round(CameraTarget.z))  );
+        int dst = int(  (2*DIM*(maze_dim+round(enemy_pos.x))) + (maze_dim + round(enemy_pos.y))  );
+        parent = dijkstra(graph, src);
+
+        if (dst-parent[dst]==2*DIM){ enemy_direction=1; target_pos.x = round(enemy_pos.x) - 1.0f; }//left
+        else if (dst-parent[dst]==-2*DIM){ enemy_direction=2; target_pos.x = round(enemy_pos.x) + 1.0f; }//right
+        else if (dst-parent[dst]==-1){ enemy_direction=3; target_pos.y = round(enemy_pos.y) + 1.0f; }//down
+        else if (dst-parent[dst]==1){ enemy_direction=4; target_pos.y = round(enemy_pos.y) - 1.0f; }//up
+    }
+
+    if((abs(enemy_pos.x - round(target_pos.x))>0.001) || (abs(enemy_pos.y - round(target_pos.y))>0.001)){
+        if(enemy_direction==1) enemy_pos.x = enemy_pos.x - enemy_speed;
+        else if(enemy_direction==2) enemy_pos.x = enemy_pos.x + enemy_speed;
+        else if(enemy_direction==3) enemy_pos.y = enemy_pos.y + enemy_speed;
+        else enemy_pos.y = enemy_pos.y - enemy_speed; 
+    }
+    else{
+        retarget=1;
+    }
+
+    if((abs(enemy_pos.x - CameraTarget.x)<0.3) && (abs(enemy_pos.y - CameraTarget.z)<0.3)){
+        LOSE = 1;
+    }
+//=================================================================================
         
+
 
         
        
         glm::mat4 projection;
         projection = glm::perspective(glm::radians(45.0f), float(SCR_WIDTH)/float(SCR_HEIGHT), 0.1f, 100.0f);     
+        
+        if(render_everything==0){goto RENDER_PLAYER;}
+        
         mazeShader.use();     
         mazeShader.setVec3("light.diffuse",diffuse_light);
         mazeShader.setVec3("light.specular", specular_light);
@@ -670,9 +749,11 @@ float indicators_vertices[] = {
             player_color = glm::vec4(0.4,1.0,0.4,1.0);
             scale_rate = 10.0f;
             antenna_rotation = 0.0f;
+            player_scale = 1.0f;
             powerup = 1;
             display_indicators = 0;
-            WIN = 1;          
+            WIN = 1;       
+            render_everything = 0;   
         }
 
         //LOSE
@@ -680,9 +761,11 @@ float indicators_vertices[] = {
             disable_movement=1;
             player_color = glm::vec4(1.0,0.4,0.4,1.0);
             scale_rate = 10.0f;
+            player_scale = 1.0f;
             antenna_rotation = 0.0f;
             powerup = 1;
-            display_indicators = 0; 
+            display_indicators = 0;
+            render_everything = 0;
         }
 
 
@@ -698,7 +781,7 @@ float indicators_vertices[] = {
             linear_light = 1.0f;
             quadratic_light = 1.0f;
         }
-        if ((powerup==1) && ((player_color.x!=player_color.y) || (player_color.x!=player_color.y) || (player_color.x!=player_color.y))){
+        if ((player_color.x!=player_color.y) && (player_color.x!=player_color.z) && (player_color.y!=player_color.z)){
             coin_color = glm::vec3(1.0,1.0,1.0);
             health_color = glm::vec3(1.0,1.0,1.0);
             speedup_color = glm::vec3(1.0,1.0,1.0);
@@ -736,7 +819,7 @@ float indicators_vertices[] = {
             }
         }
 
-
+        RENDER_PLAYER:
         //render the player
         playerShader.use();
         playerShader.setVec4("playerColor",player_color);
@@ -752,23 +835,26 @@ float indicators_vertices[] = {
 
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
+        if(render_everything==0){goto RENDER_ANTENNA;}
+
 
         //render the enemy
         playerShader.use();
-        playerShader.setVec4("playerColor",player_color);
+        playerShader.setVec4("playerColor",glm::vec4(0.7,0.1,1.0,1.0));
         playerShader.setMat4("view", view);
         playerShader.setMat4("projection", projection);
 
         glBindVertexArray(VAO_player);
 
-        glm::mat4 model_enemy = glm::mat4(1.0f);        
-        model_enemy = glm::translate(model_enemy, glm::vec3(CameraPos.x,0.0f,CameraPos.z));
-        model_enemy = glm::scale(model_enemy, glm::vec3(player_scale,player_scale,player_scale));
+        model_enemy = glm::mat4(1.0f);        
+        model_enemy = glm::translate(model_enemy, glm::vec3(enemy_pos.x,0.0f,enemy_pos.y));
+        model_enemy = glm::scale(model_enemy, glm::vec3(0.3,0.3,0.3));
+        model_enemy = glm::rotate(model_enemy, glm::radians((float)glfwGetTime()*2000), glm::vec3(0.0f, 1.0f, 0.0f));
         mazeShader.setMat4("model", model_enemy);
 
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
-
+        RENDER_ANTENNA:
 
         //rendering powerups
         powerupShader.use();
@@ -787,7 +873,7 @@ float indicators_vertices[] = {
         powerupShader.setVec3("viewPos", CameraPos);
         powerupShader.setFloat("material_shininess",1.0f);
         
-
+        
         glBindVertexArray(VAO_pow);
 
         //antenna
@@ -799,6 +885,8 @@ float indicators_vertices[] = {
         powerupShader.setMat4("model", model_pow);
         powerupShader.setVec3("singleColor",glm::vec3(player_color.x,player_color.y,player_color.z));
         glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        if(render_everything==0){goto END;}
 
 
         // render the powerups
@@ -962,7 +1050,7 @@ float indicators_vertices[] = {
      } //diplay indicator ends here
 
 
-
+        END:
 
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
@@ -986,10 +1074,6 @@ float indicators_vertices[] = {
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
-
-    cout<<"COINS="<<coins;
-    cout<<"HEALTH=:"<<health;    
-
 
     glfwTerminate();
     return 0;
