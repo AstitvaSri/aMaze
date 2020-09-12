@@ -52,7 +52,7 @@ int WIN = 0;
 int display_indicators = 1;
 
 int disable_movement = 0;
-int powerups_quantity_factor = 200; //decrease this values for more quantity
+int powerups_quantity_factor = 100; //decrease this values for more quantity
 int obstacles_quantity_factor = 300; //decrease this values for more quantity
 
 // light properties
@@ -77,7 +77,7 @@ glm::vec2 enemy_pos = glm::vec2(float(-maze_dim),float(-maze_dim));
 glm::vec2 target_pos = glm::vec2(enemy_pos.x,enemy_pos.y); //initially right
 int retarget = 1;
 int enemy_direction = 1; //1-Right, 2-Left, 3-Down, 4-Up
-float enemy_speed = 0.01f;
+float enemy_speed = 0.01f; //don't make it more than 0.02f (itherwise a bug will arise)
 int* parent;
 glm::mat4 model_enemy;
 
@@ -580,7 +580,7 @@ float indicators_vertices[] = {
 
     for(int i=0;i<(((2*DIM))-1);i++){
         for(int j=0;j<2*DIM;j++){
-            if(place_cube[i][j]==0 && place_cube[i+1][j]==0){
+            if(place_cube[i][j]<=0 && place_cube[i+1][j]<=0){
                 int p = (2*DIM*i) + j;
 				int q = (2*DIM*(i+1)) + j;
                 graph[p][q] = 1;
@@ -1118,7 +1118,7 @@ void processInput(GLFWwindow *window)
 
     //full view
     if (glfwGetKey(window,GLFW_KEY_F)==GLFW_PRESS){
-        CameraPos = glm::vec3(CameraPos.x,maze_dim*3.0f,CameraPos.z);
+        CameraPos = glm::vec3(CameraPos.x,maze_dim*2.0f,CameraPos.z);
         CameraTarget = glm::vec3(CameraTarget.x,0.0f,CameraTarget.z);
         CameraUp = glm::vec3(0.0f,0.0f,-1.0f);
         view = glm::lookAt(CameraPos,CameraTarget, CameraUp);
