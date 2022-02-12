@@ -1,5 +1,7 @@
 ## aMaze  (Quick Guide)
 
+![alt text](https://github.com/AstitvaSri/aMaze/blob/master/img/aMaze.gif)
+
 ## Controls
 
 Movement : Arrow Keys (↑, ↓ , ←, →)
@@ -39,8 +41,6 @@ running out of health and power and you see a battery over a wobbling floor. If 
 that battery there’s a chance that you might end up dying. Or might get your power
 recharged over the cost of a few coins. Use this trade-off for your benefit.
 
-![alt text](https://github.com/AstitvaSri/aMaze/blob/master/img/aMaze.gif)
-
 
 ### --------------------- INSTRUCTIONS TO COMPILE AND RUN ------------------------
 
@@ -71,7 +71,4 @@ sudo make install
 g++ aMaze.cpp  glad.c -o aMaze -lglfw3 -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lstdc++fs
 
 5. ./aMaze
-
-
-
 
