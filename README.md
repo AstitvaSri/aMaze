@@ -1,4 +1,4 @@
-## aMaze (An openGL based maze solving game)
+## aMaze (An OpenGL based maze solving game)
 
 ![alt text](https://github.com/AstitvaSri/aMaze/blob/master/img/aMaze.gif)
 
